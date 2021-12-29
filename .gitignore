@@ -7,7 +7,7 @@
 node_modules/
 dist/
 build/
-blue_meth_new.egg-info/
+mooncake.egg-info/
 
 # Compiled Java class files
 *.class
@@ -23,7 +23,6 @@ blue_meth_new.egg-info/
 
 # Maven
 target/
-dist/
 
 # JetBrains IDE
 .idea/

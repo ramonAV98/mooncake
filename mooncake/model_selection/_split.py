@@ -6,7 +6,7 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.model_selection._split import _BaseKFold
 
-from blue_meth_new.utils import datedelta, set_date_on_freq, loc_group
+from ..utils import datedelta, set_date_on_freq, loc_group
 
 
 def _loc_between(X, start_date, end_date, date_column):

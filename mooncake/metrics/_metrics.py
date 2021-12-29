@@ -4,7 +4,6 @@ groups 1,2,3. All of these have the same pattern f (y_true, y_predict)
 respecting the sklearn convention. To be compatible with functions related to
 sklearn, the function sklearn.metrics.make_scorer must be used, for example:
 
->>> from blue_meth_new.metrics import mean_absolute_error 
 >>> cross_val_score(model,
 ...  X_train,
 ...  y_train,

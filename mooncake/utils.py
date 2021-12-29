@@ -1,6 +1,6 @@
-"""bluemeth utilities.
+"""mooncake utilities.
 
-Should not have any dependency on other bluemeth packages.
+Should not have any dependency on other mooncake packages.
 """
 
 import datetime as dt

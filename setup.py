@@ -1,11 +1,17 @@
-from setuptools import setup
+from setuptools import setup, find_packages
+
+name = 'mooncake'
+version = '1.0'
+author = 'chookity'
+description = 'Ai system'
 
 setup(
-   name='mooncake',
-   version='1.0',
-   description='Ai system',
-   author='chookity',
-   packages=['mooncake'],  # same as name
+   name=name,
+   version=version,
+   author=author,
+   packages=find_packages(),
+   description=description,
+   python_requires='>=3.7.0',  
    install_requires=[
       'numpy>=1.22.0',
       'pandas>=1.2.4',

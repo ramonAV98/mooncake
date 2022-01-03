@@ -7,7 +7,7 @@ setup(
    author='chookity',
    packages=['mooncake'],  # same as name
    install_requires=[
-      'numpy>=1.21.0',
+      'numpy>=1.22.0',
       'pandas>=1.2.4',
       'scikit-learn==0.24.1',
       'skorch>=0.10.0',

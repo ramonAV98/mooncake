@@ -6,7 +6,10 @@ import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.model_selection._split import _BaseKFold
 
-from ..utils import datedelta, set_date_on_freq, loc_group
+from ..utils import check_is_datetime
+from ..utils import datedelta
+from ..utils import loc_group
+from ..utils import set_date_on_freq
 
 
 def _loc_between(X, start_date, end_date, date_column):
@@ -55,11 +58,11 @@ def train_test_split(X, test_start, test_end, date_column, freq,
         If not None, the last ``sequence_length`` samples are attached to the
         test data before ``test_start`` (useful for sequential models).
     """
-    X = X.copy()
-    X[date_column] = pd.to_datetime(X[date_column])
     if date_column not in X:
-        raise ValueError(f'Date column {date_column} not found in df')
+        raise ValueError(f'Date column {date_column} not found in X')
+    check_is_datetime(X[date_column])
 
+    X = X.copy()
     # Map dates to their correct freq
     test_start = set_date_on_freq(test_start, freq)
     test_end = set_date_on_freq(test_end, freq)

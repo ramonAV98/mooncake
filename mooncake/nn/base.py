@@ -221,75 +221,6 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         self.net_ = self._fit_skorch(train_dataset)
         return self
 
-    def _get_train_split(self, train_dataset):
-        """Obtains the validation technique used during training
-
-        Parameters
-        ----------
-        train_dataset : torch Dataset
-            Training torch dataset
-
-        Returns
-        -------
-        iterable
-        """
-        if isinstance(self.cv_split, (pd.DataFrame, torch.utils.data.Dataset)):
-            valid_dataset = self.get_dataset(
-                X=self.cv_split,
-                params=self.dataset_params_
-            )
-            return predefined_split(valid_dataset)
-        elif isinstance(self.cv_split, int):
-            if not hasattr(train_dataset, 'timeseries_cv'):
-                name = type(train_dataset).__name__
-                raise ValueError(
-                    'Dataset {} does not have a '
-                    'timeseries_cv method'.format(name)
-                )
-            # ``cv`` is list containing train, validation splits (tuples)
-            cv = train_dataset.timeseries_cv(self.cv_split)
-            return skorch.dataset.CVSplit(cv=cv)
-        elif isinstance(self.cv_split, skorch.dataset.CVSplit):
-            return self.cv_split
-        else:
-            name = type(self.cv_split).__name__
-            raise ValueError(
-                'Passed `cv_split` {} not supported'.format(name)
-            )
-
-    def _fit_skorch(self, train_dataset):
-        """Initializes and fits skorch :class: NeuralNet.
-
-        Parameters
-        ----------
-        train_dataset : torch dataset
-            Training dataset
-
-        Returns
-        -------
-        skorch NeuralNet fitted
-        """
-        module = self._init_module(train_dataset)
-        if self.cv_split is not None:
-            train_split = self._get_train_split(train_dataset)
-        else:
-            train_split = None
-        return NeuralNet(
-            module=module,
-            criterion=self.criterion,
-            optimizer=self.optimizer,
-            lr=self.lr,
-            max_epochs=self.max_epochs,
-            batch_size=self.batch_size,
-            callbacks=self.callbacks_,
-            verbose=self.verbose,
-            device=self.device,
-            train_split=train_split,
-            iterator_train__shuffle=True,
-            iterator_train__collate_fn=self.collate_fn,
-            iterator_valid__collate_fn=self.collate_fn
-        ).fit(X=train_dataset)
-
     def predict(self, X, raw=True, inverse_transformer=None):
         """Calls forward pass of the net for the given input values.
 
@@ -446,6 +377,75 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
             kwargs = add_prefix(kwargs, name)
         return kwargs
 
+    def _get_train_split(self, train_dataset):
+        """Obtains the validation technique used during training
+
+        Parameters
+        ----------
+        train_dataset : torch Dataset
+            Training torch dataset
+
+        Returns
+        -------
+        iterable
+        """
+        if isinstance(self.cv_split, (pd.DataFrame, torch.utils.data.Dataset)):
+            valid_dataset = self.get_dataset(
+                X=self.cv_split,
+                params=self.dataset_params_
+            )
+            return predefined_split(valid_dataset)
+        elif isinstance(self.cv_split, int):
+            if not hasattr(train_dataset, 'timeseries_cv'):
+                obj_name = type(train_dataset).__name__
+                raise ValueError(
+                    'Dataset {} does not have a '
+                    'timeseries_cv method'.format(obj_name)
+                )
+            # ``cv`` is list containing train, validation splits (tuples)
+            cv = train_dataset.timeseries_cv(self.cv_split)
+            return skorch.dataset.CVSplit(cv=cv)
+        elif isinstance(self.cv_split, skorch.dataset.CVSplit):
+            return self.cv_split
+        else:
+            obj_name = type(self.cv_split).__name__
+            raise ValueError(
+                'Passed `cv_split` {} not supported'.format(obj_name)
+            )
+
+    def _fit_skorch(self, train_dataset):
+        """Initializes and fits skorch :class: NeuralNet.
+
+        Parameters
+        ----------
+        train_dataset : torch dataset
+            Training dataset
+
+        Returns
+        -------
+        skorch NeuralNet fitted
+        """
+        module = self._init_module(train_dataset)
+        if self.cv_split is not None:
+            train_split = self._get_train_split(train_dataset)
+        else:
+            train_split = None
+        return NeuralNet(
+            module=module,
+            criterion=self.criterion,
+            optimizer=self.optimizer,
+            lr=self.lr,
+            max_epochs=self.max_epochs,
+            batch_size=self.batch_size,
+            callbacks=self.callbacks_,
+            verbose=self.verbose,
+            device=self.device,
+            train_split=train_split,
+            iterator_train__shuffle=True,
+            iterator_train__collate_fn=self.collate_fn,
+            iterator_valid__collate_fn=self.collate_fn
+        ).fit(X=train_dataset)
+
     def _init_module(self, train_dataset):
         """Instantiates pytorch module using object (self) attributes and
         training dataset
@@ -477,18 +477,20 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
                 'criterion must be a subclass of torch.nn.Module. Instead got '
                 '{}'.format(self.optimizer)
             )
-        for i, tup in enumerate(self.callbacks):
-            if not isinstance(tup, tuple):
-                raise ValueError(
-                    'callbacks must contain a list of (name, callback) '
-                    'tuples. Instead on index {} got {}'.format(i, tup)
-                )
-            name, obj = tup
-            if not isinstance(obj, Callback):
-                raise ValueError(
-                    'callback with name {} is not a skorch Callback object. '
-                    'Instead got {}'.format(name, obj.__class__.__name__)
-                )
+        if self.callbacks is not None:
+            for i, tup in enumerate(self.callbacks):
+                if not isinstance(tup, tuple):
+                    raise ValueError(
+                        'callbacks must contain a list of (name, callback) '
+                        'tuples. Instead on index {} got {}'.format(i, tup)
+                    )
+                name, obj = tup
+                if not isinstance(obj, Callback):
+                    obj_name = obj.__class__.__name__
+                    raise ValueError(
+                        'callback with name {} is not a skorch Callback '
+                        'object. Instead got {}'.format(name, obj_name)
+                    )
         if not isinstance(self.criterion(), MultiHorizonMetric):
             raise ValueError(
                 'criterion must be a pytorch_forecasting metric. Select one '
@@ -496,7 +498,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
             )
 
     def _eval_callbacks(self, train_dataset):
-        """Evaluates string expressions in LRScheduler
+        """Evaluates string expressions in callbacks.
 
         Returns
         -------

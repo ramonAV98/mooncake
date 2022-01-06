@@ -8,7 +8,13 @@ import inspect
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype
 from sklearn.compose._column_transformer import make_column_selector
+
+
+def check_is_datetime(series):
+    if not is_datetime64_any_dtype(series):
+        raise ValueError('Series is not datetime64 compatible')
 
 
 def group_index_generator(X, group_ids, sl, ids_to_yield=None):

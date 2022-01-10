@@ -122,6 +122,10 @@ class SeqToSeq(BaseTrainer):
         tensors will be pushed to cuda tensors before being sent to the
         module. If set to None, then all compute devices will be left
         unmodified.
+
+    kwargs : dict
+       Extra prefixed parameters (see list of supported prefixes with
+       self.prefixes).
     """
 
     def __init__(self, group_ids, time_idx, target, max_prediction_length,
@@ -130,7 +134,7 @@ class SeqToSeq(BaseTrainer):
                  cv_split=None, min_encoder_length=None, criterion=None,
                  optimizer=None, lr=1e-5, max_epochs=10, batch_size=64,
                  callbacks=None, emb_dim=10, hidden_size=16, tf_ratio=0.2,
-                 cell_type='lstm', verbose=1, device='cpu'):
+                 cell_type='lstm', verbose=1, device='cpu', **kwargs):
         super().__init__(
             module=SeqToSeqModule,
             dataset=SeqToSeqDataset,
@@ -152,7 +156,8 @@ class SeqToSeq(BaseTrainer):
             criterion=criterion,
             callbacks=callbacks,
             verbose=verbose,
-            device=device
+            device=device,
+            **kwargs
         )
         self.emb_dim = emb_dim
         self.hidden_size = hidden_size

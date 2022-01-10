@@ -1,6 +1,5 @@
 from . import (
     ensemble,
-    metrics,
     model_selection,
     nn,
     preprocessing,
@@ -10,7 +9,6 @@ from . import (
 
 __all__ = [
     'ensemble',
-    'metrics',
     'model_selection',
     'nn',
     'preprocessing',

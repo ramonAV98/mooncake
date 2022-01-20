@@ -3,7 +3,6 @@ Module for pytorch_forecasting models
 """
 
 from pytorch_forecasting import TemporalFusionTransformer as TFT
-from pytorch_forecasting.metrics import QuantileLoss
 
 from .base import BaseTrainer
 from .datasets import PyTorchForecastingDataset
@@ -71,22 +70,26 @@ class PyForecastTrainer(BaseTrainer):
         This class should not be used directly. Use derived classes instead.
     """
 
-    def __init__(self, module, group_ids, date, target, max_prediction_length,
+    def __init__(self, module, group_ids, time_idx, target,
+                 max_prediction_length, max_encoder_length,
                  time_varying_known_reals, time_varying_unknown_reals,
-                 static_categoricals, collate_fn=None, max_encoder_length=None,
-                 criterion=None, optimizer=None, lr=1e-5, max_epochs=10,
-                 batch_size=64, callbacks=None, verbose=1, device='cpu'):
+                 static_categoricals, cv_split=None, min_encoder_length=None,
+                 collate_fn=None, criterion=None, optimizer=None, lr=1e-5,
+                 max_epochs=10, batch_size=64, callbacks=None, verbose=1,
+                 device='cpu', **kwargs):
         super().__init__(
             module=module,
             dataset=PyTorchForecastingDataset,
             group_ids=group_ids,
-            date=date,
+            time_idx=time_idx,
             target=target,
             max_prediction_length=max_prediction_length,
             max_encoder_length=max_encoder_length,
             time_varying_known_reals=time_varying_known_reals,
             time_varying_unknown_reals=time_varying_unknown_reals,
             static_categoricals=static_categoricals,
+            cv_split=cv_split,
+            min_encoder_length=min_encoder_length,
             collate_fn=collate_fn,
             criterion=criterion,
             optimizer=optimizer,
@@ -95,8 +98,10 @@ class PyForecastTrainer(BaseTrainer):
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=verbose,
-            device=device
+            device=device,
+            **kwargs
         )
+        self.loss = self.criterion()
 
     def interpret_output(self, X):
         """Provides a visual interpretation of the models output that includes
@@ -326,24 +331,27 @@ class TemporalFusionTransformer(PyForecastTrainer):
         unmodified.
     """
 
-    def __init__(self, group_ids, date, target, max_prediction_length,
-                 time_varying_known_reals, time_varying_unknown_reals,
-                 static_categoricals, max_encoder_length=None,
+    def __init__(self, group_ids, time_idx, target, max_prediction_length,
+                 max_encoder_length, time_varying_known_reals,
+                 time_varying_unknown_reals, static_categoricals,
+                 cv_split=None, min_encoder_length=None,
                  criterion=None, optimizer=None, lr=1e-5, max_epochs=10,
                  batch_size=64, callbacks=None, emb_dim=10, hidden_size=16,
                  hidden_continuous_size=8, lstm_layers=2, dropout=0.1,
-                 verbose=1, device='cpu'):
+                 output_size=1, verbose=1, device='cpu', **kwargs):
         super().__init__(
             module=TFT,
             group_ids=group_ids,
-            date=date,
+            time_idx=time_idx,
             target=target,
             max_prediction_length=max_prediction_length,
             max_encoder_length=max_encoder_length,
             time_varying_known_reals=time_varying_known_reals,
             time_varying_unknown_reals=time_varying_unknown_reals,
             static_categoricals=static_categoricals,
-            collate_fn=PyTorchForecastingDataset.collate_fn,
+            cv_split=cv_split,
+            min_encoder_length=min_encoder_length,
+            collate_fn=PyTorchForecastingDataset.tft_collate_fn,
             criterion=criterion,
             optimizer=optimizer,
             lr=lr,
@@ -351,12 +359,12 @@ class TemporalFusionTransformer(PyForecastTrainer):
             batch_size=batch_size,
             callbacks=callbacks,
             verbose=verbose,
-            device=device
+            device=device,
+            **kwargs
         )
         self.emb_dim = emb_dim
         self.hidden_size = hidden_size
         self.hidden_continuous_size = hidden_continuous_size
         self.lstm_layers = lstm_layers
         self.dropout = dropout
-        self.output_size = 7 if self.criterion == QuantileLoss else 1
-
+        self.output_size = output_size

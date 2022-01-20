@@ -554,20 +554,18 @@ class PyTorchForecastingDataset(TimeSeriesDataSet, BaseDataset):
         different time series.
     """
 
-    def __init__(self, data, group_ids, date, target, max_prediction_length,
-                 max_encoder_length, time_varying_known_reals,
-                 time_varying_unknown_reals, static_categoricals,
-                 scalers=None, categorical_encoders=None):
+    def __init__(self, data, group_ids, time_idx, target,
+                 max_prediction_length, max_encoder_length,
+                 time_varying_known_reals, time_varying_unknown_reals,
+                 static_categoricals, scalers=None, categorical_encoders=None):
 
-        self.date = date  # save date attribute for get_params method to work
-        data = _add_time_idx(data, group_ids, date)
         if scalers is None:
             scalers = {k: None for k in time_varying_known_reals}
         if categorical_encoders is None:
             categorical_encoders = {}
         super().__init__(
             data=data,
-            time_idx='time_idx',
+            time_idx=time_idx,
             target=target,
             group_ids=group_ids,
             max_encoder_length=max_encoder_length,
@@ -586,7 +584,7 @@ class PyTorchForecastingDataset(TimeSeriesDataSet, BaseDataset):
             self.group_ids, sort=False).grouper.size().to_dict()
 
     @staticmethod
-    def collate_fn(batches):
+    def tft_collate_fn(batches):
         """Collate fn for temporal fusion transformer (TFT)
 
         This is a modified version of :meth:`TimeSeriesDataset._collate_fn`

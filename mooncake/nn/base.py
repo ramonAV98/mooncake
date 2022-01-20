@@ -216,7 +216,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
                  static_categoricals, cv_split=None, min_encoder_length=None,
                  collate_fn=None, criterion=None, optimizer=None, lr=1e-5,
                  max_epochs=10, batch_size=64, callbacks=None, verbose=1,
-                 device='cpu', **kwargs):
+                 device='cpu', **prefixed_kwargs):
         self.module = module
         self.dataset = dataset
         self.group_ids = group_ids
@@ -239,7 +239,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         self.verbose = verbose
         self.device = device
         self._check_params()
-        self.kwargs = kwargs
+        self.prefixed_kwargs = prefixed_kwargs
 
     def fit(self, X, y=None):
         """Initialize and fit the neural net estimator.
@@ -429,7 +429,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         else:
             kwargs = {}
         # Collect prefixed kwargs
-        prefixed_kwargs = params_for(prefix=name, kwargs=self.kwargs)
+        prefixed_kwargs = params_for(prefix=name, kwargs=self.prefixed_kwargs)
         # Join both
         kwargs.update(prefixed_kwargs)
 
@@ -504,7 +504,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
             iterator_train__shuffle=True,
             iterator_train__collate_fn=self.collate_fn,
             iterator_valid__collate_fn=self.collate_fn,
-            **self.kwargs
+            **self.prefixed_kwargs
         ).fit(X=train_dataset)
 
     def _init_module(self, train_dataset):

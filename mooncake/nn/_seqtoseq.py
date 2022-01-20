@@ -319,6 +319,22 @@ class _Encoder(nn.Module):
 
 class _Decoder(nn.Module):
     """Decoder module
+
+    Parameters
+    ----------
+    input_size : int
+        Decoder input size (number of features)
+
+    hidden_size : int
+        Size of context vector
+
+    tf_ratio : float
+        For each forward pass, if a random sample from a standard uniform
+        distribution is less than `tf_ratio`, teacher forcing is used. Use 0
+        if teacher forcing is not desired at all.
+
+    cell_type : str, {'lstm', 'gru'}
+        Rnn cell for encoder and decoder
     """
 
     def __init__(self, input_size, hidden_size, tf_ratio, cell_type):

@@ -7,41 +7,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from ..utils import undo_sliding_window
 
 
-class PassNPeriod:
-    """
-    TODO: FILL NANS
-
-    Use with: https://scikit-learn.org/0.18/modules/generated/sklearn.pipeline.FeatureUnion.html#sklearn.pipeline.FeatureUnion
-    """
-
-    conversions_date = {"Y": "years", "D": "days", "M": "months"}
-
-    def __init__(self, target_col="SALE_UNITS", date_col="SALE_DATE",
-                 group_by="Y", pass_n=1):
-        self.target_col = target_col
-        self.date_col = date_col
-        self.group_by = group_by
-        self.pass_n = pass_n
-
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, df):
-        df_ = df.copy().set_index(self.date_col)
-        k = self.conversions_date[self.group_by]
-        result = df_.resample(self.group_by).mean().reindex(df_.index,
-                                                            method='bfill')
-        result.reset_index(inplace=True)
-        columns = {
-            self.target_col: "PASS_%s%s_%s" % (self.pass_n, k.upper(),
-                                               self.target_col.upper())
-        }
-        result.rename(columns=columns, inplace=True)
-        params = {k: self.pass_n}
-        result[self.date_col] = result[self.date_col] + pd.DateOffset(**params)
-        return df.merge(result, on=self.date_col, how="left")
-
-
 class SlidingWindow(BaseEstimator, TransformerMixin):
     """Transforms n-dimensional data into sliding sequences.
 

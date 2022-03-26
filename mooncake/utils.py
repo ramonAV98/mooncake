@@ -66,7 +66,7 @@ def safe_math_eval(string):
     allowed_chars = "0123456789+-*(). /"
     for char in string:
         if char not in allowed_chars:
-            raise ValueError("Unsafe eval")
+            raise ValueError("Unsafe eval character: {}".format(char))
     return eval(string, {"__builtins__": None}, {})
 
 
@@ -119,9 +119,10 @@ class column_selector(make_column_selector):
 
     def __call__(self, X):
         cols = pd.Series(super().__call__(X))
-        if self.pattern_exclude is not None:
+        if self.pattern_exclude is not None and not cols.empty:
             cols = pd.Series(cols)
             cols = cols[-cols.str.contains(self.pattern_exclude, regex=True)]
+            return cols.tolist()
         return cols.tolist()
 
     def _to_regex(self, x, join_with='|'):

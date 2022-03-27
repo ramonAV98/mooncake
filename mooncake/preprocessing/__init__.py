@@ -5,7 +5,7 @@ datetime features and sliding windows creation.
 """
 
 from ._column_transformers import GroupTransformer, ColumnTransformer
-from ._sliding_window import SlidingWindow
+from ._sliding_window import SlidingWindow, inverse_transform_sliding_window
 from ._encoders import CyclicalDates, MultiColumnLabelEncoder
 from ._encoders import TimeIndex
 
@@ -15,5 +15,6 @@ __all__ = [
     'ColumnTransformer',
     'CyclicalDates',
     'SlidingWindow',
-    'TimeIndex'
+    'TimeIndex',
+    'inverse_transform_sliding_window'
 ]

@@ -4,7 +4,49 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ..utils import undo_sliding_window
+
+def inverse_transform_sliding_window(X, step=1, reverse=False):
+    """Inverse transformation for sliding windows data structure
+
+    Parameters
+    ----------
+    X : np.ndarray
+        ndarray containing arrays in sliding format
+
+    step : int
+        step used for constructing the sliding windows
+
+    reverse : bool
+        If True, the inverse transfrom is performed fromm end to start.
+        Otherwise, from start to end.
+
+    Returns
+    -------
+    np.ndarray
+
+    Examples
+    --------
+    # Undo sliding window with sequence_length=3 and step=1
+    >>> X = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
+    >>> inverse_transform_sliding_window(X, step=1)
+    array([[1],
+           [2],
+           [3],
+           [4],
+           [5]])
+    """
+    if not len(X.shape) > 1:
+        raise ValueError(
+            'X must have 2 or more dimensions of any size.'
+            'Instead got shape: {}'.format(X.shape)
+        )
+    np_X = np.array(X)
+    if len(np_X.shape) == 2:
+        np_X = np.expand_dims(np_X, axis=2)
+    a = np.concatenate(np_X[:, :step, :])
+    b = np_X[-1, step:, :]
+    inverse = np.concatenate((a, b))
+    return inverse if not reverse else inverse[::-1]
 
 
 class SlidingWindow(BaseEstimator, TransformerMixin):
@@ -58,7 +100,7 @@ class SlidingWindow(BaseEstimator, TransformerMixin):
         -------
         inv trans X : np.ndarray
         """
-        return undo_sliding_window(X, self.step, reverse)
+        return inverse_transform_sliding_window(X, self.step, reverse)
 
     def _fill_sliding_seqs(self, X):
         """The sliding sequences are populated using the pd.shift operator.

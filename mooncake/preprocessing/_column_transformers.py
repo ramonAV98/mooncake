@@ -3,7 +3,8 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.compose import ColumnTransformer as SkColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
-from ..utils import loc_group
+from ..utils.data import loc_group
+from ..utils.checks import check_group_ids
 
 
 class _ColumnTransformerConfig:
@@ -338,7 +339,7 @@ class GroupTransformer(BaseEstimator, TransformerMixin):
         -------
         self (object): Fitted transformer.
         """
-        self._check_group_ids(X)
+        check_group_ids(X, self.group_ids)
 
         # Mapping from group_id to ColumnTransformer object.
         self.mapping_ = {}
@@ -369,7 +370,7 @@ class GroupTransformer(BaseEstimator, TransformerMixin):
         pd.DataFrame: Transformed dataframe.
         """
         check_is_fitted(self)
-        self._check_group_ids(X)
+        check_group_ids(X, self.group_ids)
 
         holder = []  # Holder for all transformed groups.
         transformed_order = self._columns_config.get_transformed_order()
@@ -418,7 +419,7 @@ class GroupTransformer(BaseEstimator, TransformerMixin):
             Inverse transformed dataframe
         """
         check_is_fitted(self)
-        self._check_group_ids(X)
+        check_group_ids(X, self.group_ids)
 
         holder = []  # Holder of inv transformations for all groups.
         for group_id, column_transformer in self.mapping_.items():
@@ -444,14 +445,6 @@ class GroupTransformer(BaseEstimator, TransformerMixin):
         X_inv = pd.concat(holder, axis=0).reset_index(drop=True)
         X_inv = _set_dtypes(X_inv, self._columns_config, transformed=False)
         return X_inv
-
-    def _check_group_ids(self, X):
-        """Checks group_id columns are present in X
-        """
-        msg = 'group_id column {} not found in X'
-        for col in self.group_ids:
-            if col not in X:
-                raise ValueError(msg.format(col))
 
 
 class ColumnTransformer(BaseEstimator, TransformerMixin):

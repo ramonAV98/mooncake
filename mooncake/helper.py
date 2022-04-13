@@ -1,7 +1,7 @@
 """
 Helper functions and classes for users.
 
-They should not be used in skorch directly.
+They should not be used in mooncake directly.
 """
 
 import pickle
@@ -9,7 +9,7 @@ import pickle
 import pandas as pd
 
 from sklearn.base import BaseEstimator
-from .utils import column_selector
+from .utils.data import column_selector
 from skorch.callbacks import LRScheduler, GradientNormClipping, EarlyStopping
 
 __all__ = [

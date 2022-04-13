@@ -1,6 +1,8 @@
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import LabelEncoder
+from sklearn.utils.validation import check_is_fitted
 
 
 class CyclicalDates(BaseEstimator, TransformerMixin):
@@ -145,3 +147,100 @@ class TimeIndex(BaseEstimator, TransformerMixin):
 
     def _more_tags(self):
         return {'stateless': True}
+
+
+class MultiColumnLabelEncoder(BaseEstimator, TransformerMixin):
+    """Label encoder by columns.
+
+    For each column, a sklearn :class:`LabelEncoder` is fitted and applied.
+
+    Used for transforming nominal data (e.g, Holidays, IDs, etc) to a integer
+    scale that goes from 0 to n-1 where n is the number of unique values inside
+    the column.
+
+    Parameters
+    ----------
+    columns : list
+        Columns to be transformed
+
+    Attributes
+    ----------
+    mapping_ : dict, str -> LabelEncoder object
+        Dictionary mapping from column name to its corresponding fitted
+        :class:LabelEncoder object
+    """
+
+    def __init__(self, columns):
+        self.columns = columns
+
+    def fit(self, X, y=None):
+        """Obtains a LabelEncoder object for each column for later
+        transformation.
+
+        Each LabelEncoder object contains all the necessary
+        information to perform the mapping between the nominal data and its
+        corresponding numerical value.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            DataFrame to be fitted
+
+        y : None
+            This param exists to match sklearn interface, but it should never
+            be used.
+
+        Returns
+        -------
+        self : Fitted transformer
+        """
+        self.mapping_ = {}  # mapping from column to LabelEncoder object
+        for col in self.columns:
+            label_enc = LabelEncoder()
+            label_enc.fit(X[col])
+            self.mapping_[col] = label_enc
+        return self
+
+    def transform(self, X):
+        """Maps every value inside ``X`` to its numerical counterpart.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+            Dataframe having init ``columns``
+
+        Returns
+        -------
+        X : pd.DataFrame
+            Copy of ``X`` with ``columns`` numerically encoded
+        """
+        check_is_fitted(self)
+        X = X.copy()
+        for col in self.columns:
+            label_enc = self.mapping_[col]
+            X[col] = label_enc.transform(X[col])
+        X[self.columns] = X[self.columns].astype('category')
+        return X
+
+    def inverse_transform(self, X):
+        """Undos the numerical encoding.
+
+        Parameters
+        ----------
+        X : pd.DataFrame
+
+        Returns
+        -------
+        inverse transformed X
+        """
+        check_is_fitted(self)
+        X = X.copy()
+        for col in self.columns:
+            if col not in self.columns:
+                continue
+            label_enc = self.mapping_[col]
+            X[col] = label_enc.inverse_transform(X[col])
+        return X
+
+    def _flip_dict(self, d):
+        return {v: k for k, v in d.items()}

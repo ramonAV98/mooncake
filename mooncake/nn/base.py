@@ -15,10 +15,10 @@ from skorch.utils import params_for
 from torch.utils.data.dataloader import default_collate
 
 from .datasets import SliceDataset
-from ..utils import add_prefix
-from ..utils import get_init_params
-from ..utils import safe_math_eval
-from ..utils import undo_sliding_window
+from ..preprocessing import inverse_transform_sliding_window
+from ..utils.data import add_prefix
+from ..utils.data import get_init_params
+from ..utils.data import safe_math_eval
 
 
 class BaseModule(torch.nn.Module, metaclass=ABCMeta):
@@ -319,7 +319,8 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         groups_sizes_values = list(groups_sizes.values())
         sliding_output = np.split(raw_output, np.cumsum(groups_sizes_values))
         non_sliding_output = [
-            undo_sliding_window(x) for x in sliding_output if x.size != 0
+            inverse_transform_sliding_window(x)
+            for x in sliding_output if x.size != 0
         ]
 
         # The next steps are devoted to insert the values inside

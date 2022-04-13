@@ -24,7 +24,7 @@ class _ColumnTransformerConfig:
         self.column_transformer = column_transformer
         self.X = X
 
-    def _yield_transformers_triplet(self):
+    def _yield_triplets(self):
         """Yields triplet (name, transformer, features) from
         sklearn `column_transformer` instance.
 
@@ -50,12 +50,11 @@ class _ColumnTransformerConfig:
         """
         transformed_dtypes = {}
         original_dtypes = {}
-        for name, transformer, features in self._yield_transformers_triplet():
+        for name, transformer, features in self._yield_triplets():
             # Notation warning: `features` aka 'features_in' refers to the
             # column names prior to transformation. Conversely, 'feature_names'
             # aka 'features_out' refers to the columns names after
             # transformation.
-
             feature_names = self._get_feature_names(transformer, features)
 
             # Transformed dtypes
@@ -88,6 +87,11 @@ class _ColumnTransformerConfig:
     def get_columns_by_name(self, name):
         """Obtains original columns by transformer name.
 
+        In general, returned columns using :meth:`get_columns_by_name` are
+        different from the ones returned by
+        :meth:`get_transformed_columns_by_name` since column names can change
+        after being transformed.
+
         Parameters
         ----------
         name : str
@@ -96,7 +100,7 @@ class _ColumnTransformerConfig:
         -------
         columns : list
         """
-        for name_, transformer, features in self._yield_transformers_triplet():
+        for name_, transformer, features in self._yield_triplets():
             if name_ == name:
                 return features
         raise ValueError('Name {} not found'.format(name))
@@ -104,6 +108,11 @@ class _ColumnTransformerConfig:
     def get_transformed_columns_by_name(self, name):
         """Obtains transformed columns by transformer name.
 
+        In general, returned columns using :meth:`get_columns_by_name` are
+        different from the ones returned by
+        :meth:`get_transformed_columns_by_name` since column names can change
+        after being transformed.
+
         Parameters
         ----------
         name : str
@@ -112,7 +121,7 @@ class _ColumnTransformerConfig:
         -------
         columns : list
         """
-        for name_, transformer, features in self._yield_transformers_triplet():
+        for name_, transformer, features in self._yield_triplets():
             if name_ == name:
                 transformed_columns = self._get_feature_names(transformer,
                                                               features)
@@ -127,18 +136,29 @@ class _ColumnTransformerConfig:
         columns : list
         """
         transformed_order = []
-        for name, transformer, features in self._yield_transformers_triplet():
+        for name, transformer, features in self._yield_triplets():
             transformed_columns = self.get_transformed_columns_by_name(name)
             transformed_order.extend(transformed_columns)
         return transformed_order
 
     def _get_feature_names(self, transformer, features):
-        if hasattr(transformer, 'get_feature_names'):
+        """Obtains column names after transformation.
+
+        Whenever used, feature_name aka 'features_out' refers to the columns
+        names after transformation.
+        """
+        if hasattr(transformer, 'get_feature_names') and features:
+            # If `features` is empty, then the transformer was never fitted,
+            # so calling `get_feature_names()` will throw NoFittedError. Hence,
+            # the condition checks `features` is non empty.
             feature_names = transformer.get_feature_names().tolist()
+
         elif transformer == 'passthrough':
             feature_names = self.X.columns[features].tolist()
+
         else:
             feature_names = features
+
         return feature_names
 
     def _get_transformed_dtypes(self, transformer, feature_names):
@@ -150,8 +170,10 @@ class _ColumnTransformerConfig:
         return dtypes
 
     def _get_original_dtypes(self, transformer, feature_names, features):
-        if (hasattr(transformer, 'inverse_transform')
-                or transformer == 'passthrough'):
+        if (
+                hasattr(transformer, 'inverse_transform')
+                or transformer == 'passthrough'
+        ):
             if hasattr(transformer, 'get_feature_names'):
                 dtypes = self.X[features].dtypes.astype('str').to_dict()
             else:
@@ -170,7 +192,7 @@ class _ColumnTransformerInverseTransformer:
     column_transformer : sklearn ColumnTransformer
         Fitted sklearn :class:`ColumnTransformer` instance.
 
-    columns_config : _ColumnsConfig
+    columns_config : _ColumnTransformerConfig
     """
 
     def __init__(self, column_transformer, columns_config):
@@ -265,7 +287,7 @@ def _set_dtypes(X, columns_config, transformed=True):
     X : pd.DataFrame
         DataFrame where dtypes will be set
 
-    columns_config
+    columns_config : _ColumnTransformerConfig
 
     transformed : bool
         Whether to use transformed or original dtypes

@@ -46,6 +46,9 @@ class CyclicalDates(BaseEstimator, TransformerMixin):
         X_out : ndarray of shape (n_samples, n_encoded_features)
             Transformed input
         """
+        if isinstance(X, pd.DataFrame):
+            X = self._dataframe_to_series(X)
+
         if not hasattr(X, 'dt'):
             raise ValueError('X must be a datetime pandas Series with '
                              'datetime attribute `dt`, i.e., X.dt')
@@ -60,6 +63,14 @@ class CyclicalDates(BaseEstimator, TransformerMixin):
                 projections.append(proj)
         projections = np.hstack(projections)
         return projections
+
+    def _dataframe_to_series(self, X):
+        if X.shape[1] != 1:
+            raise ValueError(
+                'CyclicalDates transformer only allows pandas Series or '
+                'DataFrames with a single column.'
+            )
+        return X.iloc[:, 0]
 
     def get_feature_names(self):
         """Get output feature names for transformation

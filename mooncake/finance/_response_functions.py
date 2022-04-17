@@ -15,7 +15,7 @@ class response_function(metaclass=ABCMeta):
 
     @abstractmethod
     def fit(self, x, y):
-        """Return estimates of response function parameters from data.
+        """Returns response function parameters estimates.
 
         Parameters
         ----------
@@ -37,7 +37,7 @@ class response_function(metaclass=ABCMeta):
 
     @abstractmethod
     def f(self, x, *args):
-        """Evaluates response function at ``x``
+        """Evaluates response function at `x`.
 
         Parameters
         ----------
@@ -49,31 +49,31 @@ class response_function(metaclass=ABCMeta):
         Returns
         -------
         f(x) : array_like
-            response function evaluated at ``x``
+            response function evaluated at `x`.
         """
         pass
 
     @abstractmethod
     def elasticity(self, x, *args):
-        """Calculates the elasticity at ``x`` for the response function
+        """Calculates the elasticity at `x` for the response function.
 
         Parameters
         ----------
         x : array_like
 
         arg1, arg2, arg3,... : floats
-            response function parameters
+            response function parameters.
 
         Returns
         -------
         elasticity : array_like
-            Elasticities at x
+            Elasticities at x.
         """
         pass
 
 
 class constant_elasticity_gen(response_function):
-    r"""A constant elasticity response function
+    r"""A constant elasticity response function.
 
     Notes
     -----

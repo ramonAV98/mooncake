@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 
-from .data import (check_group_ids,
-                   loc_group,
-                   check_is_datetime,
-                   check_group_id_presence)
+from .checks import (
+    check_group_ids,
+    check_is_datetime,
+    check_group_id_presence
+)
+from .data import loc_group
 
 
 class _GroupPlotter:
@@ -22,6 +24,7 @@ class _GroupPlotter:
         Column to plot. If None, it is expected `X` contains a single column
         (the one to be plotted) apart from the `group_ids`.
     """
+
     def __init__(self, group_ids, timestamp_column, column_to_plot=None):
         self.group_ids = group_ids
         self.timestamp_column = timestamp_column
@@ -49,8 +52,8 @@ class _GroupPlotter:
 
         if len(non_group_ids_columns) > 1:
             if self.column_to_plot is None:
-                raise ValueError('`column_to_plot` must be specified when X '
-                                 'contains multiple columns.')
+                raise ValueError('`column_to_plot` param must be specified '
+                                 'when X contains multiple columns.')
             else:
                 column_to_plot = self.column_to_plot
 
@@ -70,7 +73,6 @@ class _GroupPlotter:
 
 def plot_group_series(X, group_ids, timestamp_column, group_id,
                       column_to_plot=None, ax=None):
-
     """Plots a single group.
 
     Parameters
@@ -104,8 +106,3 @@ def plot_group_series(X, group_ids, timestamp_column, group_id,
     plotter = _GroupPlotter(group_ids, timestamp_column, column_to_plot)
     ax = plotter.plot(X, group_id, ax)
     return ax
-
-
-
-
-

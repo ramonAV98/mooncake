@@ -1,5 +1,5 @@
-import numpy as np
 from sklearn.utils.validation import check_is_fitted
+from ...utils.data import safe_hstack
 
 
 class ColumnTransformerInverseTransformer:
@@ -46,7 +46,8 @@ class ColumnTransformerInverseTransformer:
             else:
                 inv_transforms.append(inverse_transformed_columns)
 
-        return np.hstack(inv_transforms)
+        stacked_arrays = safe_hstack(inv_transforms)
+        return stacked_arrays
 
     def get_non_invertible_columns(self):
         """Returns non invertible columns.

@@ -5,6 +5,28 @@ import pandas as pd
 from sklearn.compose._column_transformer import make_column_selector
 
 
+def safe_hstack(arrays):
+    """If :meth:`np.stack` raises TypeError, converts all arrays to object
+    dtype and tries again.
+
+    Parameters
+    ----------
+    arrays : sequence of ndarrays
+        The arrays must have the same shape along all but the second axis,
+        except 1-D arrays which can be any length.
+
+    Returns
+    -------
+    stacked : ndarray
+        The array formed by stacking the given arrays.
+    """
+    try:
+        return np.hstack(arrays)
+    except TypeError:
+        obj_arrays = [arr.astype(object) for arr in arrays]
+        return np.hstack(obj_arrays)
+
+
 def numpy_2d_to_pandas(arrays, columns=None, dtypes=None):
     """Converts collection of 2-D numpy arrays to a single pandas DataFrame.
 

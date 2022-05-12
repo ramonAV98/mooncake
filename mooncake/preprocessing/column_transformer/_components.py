@@ -4,8 +4,7 @@ from sklearn.utils.validation import check_is_fitted
 
 
 class ComponentsGetter:
-    """Interface for the :meth:`get` method for all
-    :class:`ColumnTransformerComponent`.
+    """Get method interface for all :class:`ColumnTransformerComponent`.
     """
 
     def __init__(self, column_transformer, X):

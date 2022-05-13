@@ -1,4 +1,5 @@
 from sklearn.utils.validation import check_is_fitted
+
 from ...utils.data import safe_hstack
 
 
@@ -69,7 +70,10 @@ class ColumnTransformerInverseTransformer:
             non_invertible = self.components_getter.get_columns_by_name(
                 name, transformed=False)
 
-        self._non_invertible_columns.extend(non_invertible)
+        # Check `non_invertible` are not already stored.
+        for col in non_invertible:
+            if col not in self._non_invertible_columns:
+                self._non_invertible_columns.append(col)
 
     def _inverse_transform_columns(self, X, transformer, columns_to_inv):
         """Performs an inverse transformation on the given `columns_to_inv`

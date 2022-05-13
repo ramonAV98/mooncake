@@ -32,7 +32,7 @@ def _to_pandas(arrays, components_getter, transformed=True,
         non_invertible = inverse_transformer.get_non_invertible_columns()
         for column in non_invertible:
             columns.remove(column)
-            del dtypes[column]
+            dtypes.pop(column)
 
     if not isinstance(arrays, list):
         arrays = [arrays]

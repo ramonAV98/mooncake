@@ -43,7 +43,9 @@ class ColumnTransformerInverseTransformer:
 
             # Check for non invertible columns.
             if inverse_transformed_columns is None:
-                self._save_non_invertible(name)
+                non_invertible = self.components_getter.get_columns_by_name(
+                    name, transformed=False)
+                self._save_non_invertible(non_invertible)
             else:
                 inv_transforms.append(inverse_transformed_columns)
 
@@ -53,27 +55,20 @@ class ColumnTransformerInverseTransformer:
     def get_non_invertible_columns(self):
         """Returns non invertible columns.
 
+        These are columns from the non transformed universe whose inverse
+        transformation is not possible. Hence, they are not invertible.
+
         Returns
         -------
         non_invertible_columns : list
         """
         return self._non_invertible_columns
 
-    def _save_non_invertible(self, name=None, non_invertible=None):
+    def _save_non_invertible(self, non_invertible):
         """Saves non invertible columns in private attribute
         `_non_invertible_columns`.
         """
-        if non_invertible is None:
-            non_invertible = []
-
-        if name is not None:
-            non_invertible = self.components_getter.get_columns_by_name(
-                name, transformed=False)
-
-        # Check `non_invertible` are not already stored.
-        for col in non_invertible:
-            if col not in self._non_invertible_columns:
-                self._non_invertible_columns.append(col)
+        self._non_invertible_columns.extend(non_invertible)
 
     def _inverse_transform_columns(self, X, transformer, columns_to_inv):
         """Performs an inverse transformation on the given `columns_to_inv`
@@ -95,28 +90,30 @@ class ColumnTransformerInverseTransformer:
         Returns
         -------
         X_inv : 2-D numpy array
-            Array with inverse transformed columns. An empty array is returned
+            Array with inverse transformed columns. None is returned
             when inverse transformation is not possible.
         """
-        # Similar to the :class:`sklearn.compose.ColumnTransformer`
-        # :meth:`transform` method, the inverse transform should also
-        # ignore whenever the given columns are empty.
+        # Similar to the transform method from class
+        # :class:`sklearn.compose.ColumnTransformer,
+        # this inverse transform should also ignore whenever the given columns
+        # are empty.
         if not columns_to_inv:
             return None
 
+        # Collect missing columns.
         missing_columns = [c for c in columns_to_inv if c not in X]
+
+        # For the `transformer == "passthrough"` case, the inverse
+        # transformation continues even with missing columns. However,
+        # they are added to the non invertible list.
+        if transformer == 'passthrough':
+            if missing_columns:
+                self._save_non_invertible(non_invertible=missing_columns)
+            columns_to_inv = [c for c in columns_to_inv if c in X]
+            return X[columns_to_inv].values
 
         if hasattr(transformer, 'inverse_transform'):
             if missing_columns:
                 return None
             return transformer.inverse_transform(X[columns_to_inv])
-
-        if transformer == 'passthrough':
-            # For the `transformer == "passthrough"` case, the inverse
-            # transformation continues even with missing columns. However,
-            # they are added to the non invertible list.
-            if missing_columns:
-                self._save_non_invertible(non_invertible=missing_columns)
-            columns_to_inv = [c for c in columns_to_inv if c in X]
-            return X[columns_to_inv].values
         return None

@@ -22,7 +22,7 @@ def _to_pandas(arrays, components_getter, transformed=True,
     """Converts collection of 2-D arrays to a pandas DataFrame.
     """
     # Columns and dtypes for output pandas DataFrame.
-    columns = components_getter.get_columns_order(transformed)
+    columns_order = components_getter.get_columns_order(transformed)
     dtypes = components_getter.get_columns_dtypes(transformed)
 
     # Check for non invertible columns.
@@ -31,13 +31,19 @@ def _to_pandas(arrays, components_getter, transformed=True,
         # they must be removed from the conversion.
         non_invertible = inverse_transformer.get_non_invertible_columns()
         for column in non_invertible:
-            columns.remove(column)
-            dtypes.pop(column)
+            columns_order.remove(column)
+            # It is possible the same column name appears more than once in
+            # the `non_invertible` list. While it is not problem for the list
+            # `columns_order` to have duplicates it is for the dict `dtypes`.
+            # Additionally, if there still exists a duplicate in
+            # `columns_order`, it is not deleted from `dtypes`.
+            if column in dtypes and column not in columns_order:
+                dtypes.pop(column)
 
     if not isinstance(arrays, list):
         arrays = [arrays]
 
-    return numpy_2d_to_pandas(arrays, columns, dtypes)
+    return numpy_2d_to_pandas(arrays, columns_order, dtypes)
 
 
 class GroupColumnTransformer(BaseEstimator, TransformerMixin):
@@ -240,6 +246,6 @@ class ColumnTransformer(BaseEstimator, TransformerMixin):
         """
         inverse_transformer = ColumnTransformerInverseTransformer(
             self.column_transformer_, self._components_getter)
-        X_inv = inverse_transformer.inverse_transform(X)
-        return _to_pandas(X_inv, self._components_getter, transformed=False,
+        inv_X = inverse_transformer.inverse_transform(X)
+        return inverse_transformer, _to_pandas(inv_X, self._components_getter, transformed=False,
                           inverse_transformer=inverse_transformer)

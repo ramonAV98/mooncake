@@ -247,5 +247,7 @@ class ColumnTransformer(BaseEstimator, TransformerMixin):
         inverse_transformer = ColumnTransformerInverseTransformer(
             self.column_transformer_, self._components_getter)
         inv_X = inverse_transformer.inverse_transform(X)
-        return inverse_transformer, _to_pandas(inv_X, self._components_getter, transformed=False,
-                          inverse_transformer=inverse_transformer)
+        inv_pandas = _to_pandas(
+            inv_X, self._components_getter, transformed=False,
+            inverse_transformer=inverse_transformer)
+        return inv_pandas

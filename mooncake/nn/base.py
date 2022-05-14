@@ -266,7 +266,7 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         self.net_ = self._fit_skorch(train_dataset)
         return self
 
-    def predict(self, X, raw=True, inverse_transformer=None):
+    def predict(self, X, raw=True, X_features=None):
         """Calls forward pass of the net for the given input values.
 
         Parameters
@@ -276,12 +276,8 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
 
         raw : bool
             - If True, raw predictions in a numpy array are returned
-            - If False, an interpretable version of predictions is returned.
-
-        inverse_transformer : transformer
-            If not None, predictions are inverse transformed using the
-            :meth:`inverse_transform` method of this object. Only available
-            when ``raw`` is False.
+            - If False, an interpretable pandas version of predictions is
+            returned.
 
         Returns
         -------
@@ -292,11 +288,11 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
 
         Notes
         -----
-        Predictions (interpretable or not) are sorted by group_ids and date.
-        So, for instance, it is possible that the order of the
+        Predictions (interpretable or not) are sorted by group_ids and
+        time_index. So, for instance, it is possible that the order of the
         non-interpretable predictions does not match the order of the given
         ``X``. Same is true for interpretable predictions; however, in such
-        case, a date column is added, so no chance of misinterpretation is
+        case, a time index is added, so no chance of misinterpretation is
         possible.
         """
         check_is_fitted(self)
@@ -343,22 +339,12 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
             tail_idx = g.get_group(group).tail(n_pred).index.tolist()
             pred_idx.extend(tail_idx)
             y_hat.loc[tail_idx, self.target] = non_sliding_output[i]
+
         # Only keep prediction info
-        y_hat = y_hat.loc[pred_idx]
-
-        # Inverse transform
-        if inverse_transformer is not None:
-            y_hat = inverse_transformer.inverse_transform(y_hat)
-            X = inverse_transformer.inverse_transform(X)
-
-        # Recover true values and return only primary key with target column
-        columns_to_keep = pk + [self.target]
-        y_hat = pd.merge(
-            y_hat[columns_to_keep],
-            X[columns_to_keep],
-            on=pk,
-            suffixes=('_pred', '_true')
-        )
+        if X_features is None:
+            X_features = []
+        to_keep = pk + [self.target] + X_features
+        y_hat = y_hat.loc[pred_idx, to_keep]
         return y_hat
 
     def get_dataset(self, X, params=None, sliceable=False, **kwargs):

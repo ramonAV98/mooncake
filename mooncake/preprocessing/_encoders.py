@@ -122,8 +122,10 @@ class TimeIndex(BaseEstimator, TransformerMixin):
         Integer (including 0) where the time index will start
     """
 
-    def __init__(self, start_idx=0):
+    def __init__(self, start_idx=0, extra_timestamps=10, freq='D'):
         self.start_idx = start_idx
+        self.extra_timestamps = extra_timestamps
+        self.freq = freq
         self.dtype = int
 
     def fit(self, X, y=None):
@@ -135,6 +137,8 @@ class TimeIndex(BaseEstimator, TransformerMixin):
         real_dates = X.tolist()
         time_idx = range(self.start_idx, len(X) + self.start_idx)
         self.mapping_ = dict(zip(real_dates, time_idx))
+        if self.extra_timestamps > 0:
+            self._add_extra_timestamps()
         return self
 
     def transform(self, X):
@@ -155,6 +159,22 @@ class TimeIndex(BaseEstimator, TransformerMixin):
             X = X.iloc[:, 0]
         inverse_map = {v: k for k, v in self.mapping_.items()}
         return X.map(inverse_map).values.reshape(-1, 1)
+
+    def _add_extra_timestamps(self):
+        # Extra date range
+        max_timestamp = max(self.mapping_)
+        extra_date_range = pd.date_range(
+            max_timestamp, periods=self.extra_timestamps, freq=self.freq,
+            closed='right')
+        extra_date_range.freq = None
+
+        # Extra time index
+        max_time_index = max(self.mapping_.values())
+        extra_time_index = range(
+            max_time_index, max_time_index + len(extra_date_range))
+
+        extra_mapping = dict(zip(extra_date_range, extra_time_index))
+        self.mapping_.update(extra_mapping)
 
     def _more_tags(self):
         return {'stateless': True}

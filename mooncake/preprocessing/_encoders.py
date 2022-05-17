@@ -165,7 +165,7 @@ class TimeIndex(BaseEstimator, TransformerMixin):
         max_timestamp = max(self.mapping_)
         extra_date_range = pd.date_range(
             max_timestamp, periods=self.extra_timestamps, freq=self.freq,
-            closed='right')
+            inclusive='right')
         extra_date_range.freq = None
 
         # Extra time index

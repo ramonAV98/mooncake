@@ -53,6 +53,7 @@ Thumbs.db
 .ipynb_checkpoints
 
 # Temporary
+*.csv
 *.ipynb
 mooncake-venv/
 requirements.txt

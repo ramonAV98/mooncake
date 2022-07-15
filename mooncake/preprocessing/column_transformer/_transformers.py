@@ -146,19 +146,18 @@ class GroupColumnTransformer(BaseEstimator, TransformerMixin):
     def inverse_transform(self, X):
         """Inverse transformation.
 
-        If X contains additional previously unseen column, they will
-        be lost unless ``keep_all_columns`` is True. Also, transformed columns
-        whose corresponding transformer does not have implemented an
-        :meth:`inverse_transform` method will not appear after calling this
-        inverse transformation. This causes that the resulting DataFrame
-        ``X_out`` might not be equal to the original X, that is, the
+        Notes
+        -----
+        Transformed columns whose corresponding transformer does not have
+        implemented an :meth:`inverse_transform` method will not appear after
+        calling this inverse transformation. This causes that the resulting
+        DataFrame ``X_out`` might not be equal to the original X, that is, the
         expression X = f-1(f(X)) wont be satisfied.
 
         Parameters
         ----------
         X : pd.DataFrame
             Dataframe to be inverse transformed.
-
 
         Returns
         -------

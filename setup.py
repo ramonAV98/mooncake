@@ -11,7 +11,7 @@ setup(
    author=author,
    packages=find_packages(),
    description=description,
-   python_requires='>=3.7.0',  
+   python_requires='<3.10',
    install_requires=[
       'numpy>=1.22.0',
       'pandas>=1.2.4',

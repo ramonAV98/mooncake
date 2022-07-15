@@ -11,18 +11,19 @@ class ComponentsGetter:
         self.factory = ComponentsFactory(column_transformer, X)
 
     def get_columns_by_name(self, name, transformed=True):
-        columns_by_name_component = self.factory.get_component(
-            'columns_by_name')
+        component_name = 'columns_by_name'
+        columns_by_name_component = self.factory.get_component(component_name)
         return columns_by_name_component.get(
             name=name, transformed=transformed)
 
     def get_columns_order(self, transformed=True):
-        columns_order_component = self.factory.get_component(
-            'columns_order')
+        component_name = 'columns_order'
+        columns_order_component = self.factory.get_component(component_name)
         return columns_order_component.get(transformed=transformed)
 
     def get_columns_dtypes(self, transformed=True):
-        columns_dtypes_component = self.factory.get_component('columns_dtypes')
+        component_name = 'columns_dtypes'
+        columns_dtypes_component = self.factory.get_component(component_name)
         return columns_dtypes_component.get(transformed=transformed)
 
 

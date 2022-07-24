@@ -3,11 +3,10 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.compose import ColumnTransformer as SkColumnTransformer
 from sklearn.utils.validation import check_is_fitted
 
-from mooncake.utils.checks import check_group_ids
-from mooncake.utils.data import loc_group
 from ._components import ComponentsGetter
 from ._inverse_transformer import ColumnTransformerInverseTransformer
-from ...utils.data import numpy_2d_to_pandas
+from ...utils.checks import check_group_ids
+from ...utils.data import numpy_2d_to_pandas, loc_group
 
 
 def _instantiate_sklearn_column_transformer(transformers):

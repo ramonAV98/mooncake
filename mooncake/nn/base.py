@@ -409,15 +409,17 @@ class BaseTrainer(BaseEstimator, metaclass=ABCMeta):
         -------
         kwargs : dict
         """
-        # Collect kwargs from attribute's init
+        # Collect kwargs from attribute's init.
         if hasattr(self, name):
             init_params = get_init_params(getattr(self, name))
             kwargs = {k: v for k, v in vars(self).items() if k in init_params}
         else:
             kwargs = {}
-        # Collect prefixed kwargs
+
+        # Collect prefixed kwargs.
         prefixed_kwargs = params_for(prefix=name, kwargs=self.prefixed_kwargs)
-        # Join both
+
+        # Join both.
         kwargs.update(prefixed_kwargs)
 
         if prefix:

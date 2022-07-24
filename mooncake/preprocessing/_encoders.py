@@ -168,10 +168,14 @@ class TimeIndex(BaseEstimator, TransformerMixin):
             inclusive='right')
         extra_date_range.freq = None
 
-        # Extra time index
+        # Extra time index.
+        # Notice :func:`range()` starts at ``max_time_index + 1`` since it
+        # needs to be right inclusive.
         max_time_index = max(self.mapping_.values())
         extra_time_index = range(
-            max_time_index, max_time_index + len(extra_date_range))
+            max_time_index + 1,
+            max_time_index + len(extra_date_range)
+        )
 
         extra_mapping = dict(zip(extra_date_range, extra_time_index))
         self.mapping_.update(extra_mapping)
